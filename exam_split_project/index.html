@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+<meta charset="UTF-8">
+<title>證照模擬考</title>
+
+<link rel="stylesheet" href="./css/style.css">
+
+</head>
+
+
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div class="hero-header">
+      <h1>證照模擬考平台</h1>
+      <button id="themeToggle" class="theme-toggle" title="切換亮暗模式">
+        <span id="themeIcon">🌙</span>
+      </button>
+    </div>
+    <p>
+      支援匯入 docx 或 txt 題庫。可使用正式考試模式、學習模式與範圍考試，並在測驗完成後列出錯題，再進行錯題重測。
+    </p>
+
+    <div class="badge-row">
+      <div class="badge">可匯入 DOCX / TXT 題庫</div>
+      <div class="badge">正式考試 / 學習 / 範圍模式</div>
+      <div class="badge">錯題重測</div>
+      <div class="badge">隨機題號與答案</div>
+      <div class="badge">已載入題數：<span id="totalQuestionCount">0</span></div>
+    </div>
+  </section>
+
+  <section class="upload-card">
+    <div class="upload-title">題庫匯入</div>
+    <div class="upload-desc">
+      請選擇你整理好的 docx 或 txt 題庫檔。載入成功後才可開始測驗。
+    </div>
+
+    <div class="upload-row">
+      <input type="file" id="fileInput" accept=".docx,.txt" />
+      <button id="loadSampleBtn" class="secondary">載入範例題庫</button>
+      <button id="downloadFormatBtn" class="ghost">查看格式範例</button>
+    </div>
+
+    <div id="importStatus" class="import-status">
+      尚未載入題庫
+    </div>
+
+    <div id="parseDebugBox" class="note-box hidden"></div>
+    <div id="parsedQuestionBox" class="note-box hidden"></div>
+
+    <pre id="formatPreview" class="format-preview hidden"></pre>
+  </section>
+
+  <section id="setupView" class="grid">
+    <div class="card">
+      <h2>正式考試模式</h2>
+      <p>
+        模擬正式考試。作答時不顯示答案與解析，全部做完後才看成績與錯題整理。
+      </p>
+      <div class="controls">
+        <button id="startExamBtn" disabled>開始正式考試</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>範圍考試模式</h2>
+      <p>
+        自訂題號範圍與測驗題數，並可選擇是否隨機化題目順序與答案選項。
+      </p>
+      <div class="controls">
+        <div style="display:flex; gap:8px; align-items:center; width:100%; flex-wrap:wrap;">
+          <label>範圍：</label>
+          <select id="rangeStart" disabled></select>
+          <span>~</span>
+          <select id="rangeEnd" disabled></select>
+          
+          <label style="margin-left:8px;">題數：</label>
+          <input type="number" id="rangeCount" min="1" value="10" disabled />
+        </div>
+        
+        <div style="display:flex; gap:16px; width:100%; margin-top:8px;">
+          <label class="checkbox-group">
+            <input type="checkbox" id="shuffleQuestions" checked /> 隨機題號
+          </label>
+          <label class="checkbox-group">
+            <input type="checkbox" id="shuffleOptions" checked /> 隨機答案
+          </label>
+        </div>
+
+        <button id="startRangeBtn" class="warn" style="margin-top:8px;" disabled>開始範圍考試</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>學習模式</h2>
+      <p>
+        可自由選擇題號區間進行測驗，並可直接顯示答案與解析，方便分段練習。
+      </p>
+      <div class="controls">
+        <label for="studyStart">起始題號</label>
+        <select id="studyStart" disabled></select>
+
+        <label for="studyEnd">結束題號</label>
+        <select id="studyEnd" disabled></select>
+
+        <button id="startStudyBtn" class="good" disabled>開始學習測驗</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="quizView" class="quiz-shell hidden">
+    <aside class="panel">
+      <div class="meta">
+        <div><strong>模式：</strong><span id="modeLabel"></span></div>
+        <div><strong>目前進度：</strong><span id="progressText"></span></div>
+        <div><strong>已答題數：</strong><span id="answeredText"></span></div>
+        <div><strong>目前答對：</strong><span id="correctText"></span></div>
+      </div>
+
+      <div class="progress-bar"><span id="progressBar"></span></div>
+
+      <div class="controls" style="margin-top: 16px;">
+        <button id="backHomeBtn" class="ghost">返回模式選擇</button>
+      </div>
+
+      <div class="footer-note">
+        學習模式可先看答案再送出。<br />
+        測驗完成後可直接重測錯題。
+      </div>
+    </aside>
+
+    <main>
+      <div class="question-card">
+        <div class="question-number" id="questionNumber"></div>
+        <div class="question-text" id="questionText"></div>
+        <div class="option-list" id="optionList"></div>
+
+        <div class="controls">
+          <button id="showAnswerBtn" class="warn hidden">顯示答案</button>
+          <button id="submitBtn">送出答案</button>
+          <button id="nextBtn" class="secondary hidden">下一題</button>
+        </div>
+
+        <div id="feedback" class="feedback hidden"></div>
+        <div id="noteBox" class="note-box hidden"></div>
+      </div>
+
+      <div id="resultView" class="result-card hidden">
+        <div class="score" id="scoreText"></div>
+        <div id="scoreSub"></div>
+
+        <div class="controls" style="margin-top: 16px;">
+          <button id="retryWrongBtn" class="good hidden">重測錯題</button>
+          <button id="retryCurrentRangeBtn" class="warn hidden">重新測驗本次範圍</button>
+          <button id="continueNextBtn" class="hidden">繼續下 <span id="continueNextLabel">10</span> 題</button>
+          <button id="restartBtn" class="secondary">重新選模式</button>
+        </div>
+
+        <div id="wrongSummary" class="wrong-list"></div>
+      </div>
+    </main>
+  </section>
+</div>
+
+<script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+<script src="./js/data.js"></script>
+<script src="./js/utils.js"></script>
+<script src="./js/parser.js"></script>
+<script src="./js/ui.js"></script>
+<script src="./js/quiz.js"></script>
+<script src="./js/theme.js"></script>
+<script src="./js/app.js"></script>
+
+</body>
+</html>
