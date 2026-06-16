@@ -533,3 +533,30 @@ input:disabled {
     font-size: 18px;
   }
 }
+
+.question-image {
+  max-width: 400px;
+  max-height: 250px;
+  width: auto;
+  height: auto;
+  display: block;
+  margin: 14px auto;
+  border-radius: 12px;
+  cursor: zoom-in;
+}
+
+.image-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  cursor: zoom-out;
+}
+
+.image-modal img {
+  max-width: 95vw;
+  max-height: 95vh;
+}
