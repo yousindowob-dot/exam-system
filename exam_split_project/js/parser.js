@@ -75,6 +75,7 @@ function parseQuestionBlock(block) {
 
   const options = {};
   const emptyOptions = [];
+  const formatErrors = [];
   const images = [];
 
   let answer = "";
@@ -87,6 +88,7 @@ function parseQuestionBlock(block) {
 
   while (
     i < lines.length &&
+    !/^[A-Z]\s+\S+/i.test(lines[i]) &&
     !/^([A-Z])(?:[\.\)\:：、]\s*(.*)|\s*)$/i.test(lines[i]) &&
     !/^(?:Answer|答案|answer_in_bank)\s*[\:：]\s*[A-Z,\s]+$/i.test(lines[i]) &&
     !/^(?:Note|note|解析|說明)\s*[\:：]/i.test(lines[i])
@@ -95,6 +97,7 @@ function parseQuestionBlock(block) {
 
     if (imgMatch) {
       const imageKey = imgMatch[1].toUpperCase();
+
       if (docxImageMap[imageKey]) {
         images.push(docxImageMap[imageKey]);
       }
@@ -111,7 +114,7 @@ function parseQuestionBlock(block) {
     const line = lines[i];
     let m;
 
-    if ((m = line.match(/^([A-Z])(?:[\.\)\:：、]\s*(.*)|\s*)$/i))) {
+    if ((m = line.match(/^([A-Z])[\.\)\:：、]\s*(.*)$/i))) {
       const key = m[1].toUpperCase();
       const value = (m[2] || "").trim();
 
@@ -120,6 +123,15 @@ function parseQuestionBlock(block) {
       if (!value) {
         emptyOptions.push(`選項 ${key} 沒有內容`);
       }
+
+    } else if ((m = line.match(/^([A-Z])$/i))) {
+      const key = m[1].toUpperCase();
+
+      options[key] = "";
+      emptyOptions.push(`選項 ${key} 沒有內容`);
+
+    } else if (/^[A-Z]\s+\S+/i.test(line)) {
+      formatErrors.push(`選項格式錯誤：${line}`);
 
     } else if ((m = line.match(/^(?:Answer|答案|answer_in_bank)\s*[\:：]\s*([A-Z,\s]+)$/i))) {
       answer = normalizeAnswerText(m[1]);
@@ -150,6 +162,10 @@ function parseQuestionBlock(block) {
 
   if (emptyOptions.length) {
     missing.push(...emptyOptions);
+  }
+
+  if (formatErrors.length) {
+    missing.push(...formatErrors);
   }
 
   if (!answer) {
