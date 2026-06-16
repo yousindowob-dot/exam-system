@@ -127,10 +127,12 @@ function renderQuestion() {
 
   el.questionNumber.textContent = `第 ${state.currentIndex + 1} 題 / 題庫編號 Q${q.question_number}`;
 
-  const imageHtml = (q.images || []).map(src => `
-    <img 
-      src="${src}" 
-      style="max-width:100%; display:block; margin:14px 0; border-radius:12px;"
+  const imageHtml = (q.images || []).map((src, index) => `
+    <img
+      src="${src}"
+      class="question-image"
+      data-image-index="${index}"
+      alt="題目圖片 ${index + 1}"
     >
   `).join("");
 
@@ -161,6 +163,12 @@ function renderQuestion() {
       }
 
       input.closest(".option").classList.toggle("selected", input.checked);
+    });
+  });
+  document.querySelectorAll(".question-image").forEach(img => {
+    img.addEventListener("click", () => {
+      document.getElementById("modalImage").src = img.src;
+      document.getElementById("imageModal").classList.remove("hidden");
     });
   });
 }
@@ -319,4 +327,6 @@ function showResults() {
     `;
   }).join("");
 }
-
+document.getElementById("imageModal").addEventListener("click", () => {
+  document.getElementById("imageModal").classList.add("hidden");
+});
