@@ -1,10 +1,7 @@
 麻雀蛋吐司測驗系統 - 拆分版
 
-開啟方式：
-1. 直接開 index.html 可使用。
-2. DOCX 功能目前仍透過網路載入 mammoth.browser.min.js。
-3. 若要離線使用，請下載 mammoth.browser.min.js 放到 js/，並把 index.html 第一個 script 改成：
-   <script src="./js/mammoth.browser.min.js"></script>
+Excel格式固定4選項(A~D)
+TXT / DOCX 仍支援 A~Z
 
 檔案說明：
 - index.html：頁面結構
