@@ -233,6 +233,7 @@ function submitAnswer() {
   });
 
   if (state.mode === "exam" || state.mode === "range") {
+    updateSidebar();
     nextQuestion();
     return;
   }
