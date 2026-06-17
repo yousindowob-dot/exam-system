@@ -24,13 +24,14 @@
     </p>
 
     <div class="badge-row">
-      <div class="badge">可匯入 DOCX / TXT 題庫</div>
+      <div class="badge">可匯入 DOCX / TXT / XLSX 題庫</div>
       <div class="badge">正式考試 / 學習 / 範圍模式</div>
       <div class="badge">錯題重測</div>
       <div class="badge">隨機題號與答案</div>
       <div class="badge">可偵測題庫錯誤點</div>
       <div class="badge">複選題已建置</div>
       <div class="badge">DOCX圖片顯示功能</div>
+      <div class="badge">XLSX僅提供四個選項，不支援圖片功能</div>
       <div class="badge">已載入題數：<span id="totalQuestionCount">0</span></div>
     </div>
   </section>
@@ -42,9 +43,24 @@
     </div>
 
     <div class="upload-row">
-      <input type="file" id="fileInput" accept=".docx,.txt" />
+      <input type="file" id="fileInput" accept=".docx,.txt,.xlsx" />
       <button id="loadSampleBtn" class="secondary">載入範例題庫</button>
       <button id="downloadFormatBtn" class="ghost">查看格式範例</button>
+      <div class="sample-downloads">
+        <span>格式範例下載：</span>
+
+        <a href="./samples/sample.txt" download>
+            TXT範例
+        </a>
+
+        <a href="./samples/sample.docx" download>
+            DOCX範例
+        </a>
+
+        <a href="./samples/sample.xlsx" download>
+            Excel範例
+        </a>
+      </div>
     </div>
 
     <div id="importStatus" class="import-status">
@@ -175,6 +191,7 @@
 <script src="./js/mammoth.browser.min.js"></script>
 <script src="./js/data.js"></script>
 <script src="./js/utils.js"></script>
+<script src="./js/xlsx.full.min.js"></script>
 <script src="./js/parser.js"></script>
 <script src="./js/ui.js"></script>
 <script src="./js/quiz.js"></script>
