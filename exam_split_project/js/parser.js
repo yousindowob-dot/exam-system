@@ -35,15 +35,118 @@ async function extractTextFromDocx(file) {
           docxImageMap[marker] = src;
           imageIndex++;
 
-          return {
-            src
-          };
+          return { src };
         });
       })
     }
   );
 
   return convertDocxHtmlToQuestionText(result.value || "");
+}
+
+async function extractQuestionsFromExcel(file) {
+  if (typeof XLSX === "undefined") {
+    throw new Error("請先引入 xlsx.full.min.js");
+  }
+
+  const arrayBuffer = await file.arrayBuffer();
+  const workbook = XLSX.read(arrayBuffer, { type: "array" });
+  const sheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[sheetName];
+
+  const rows = XLSX.utils.sheet_to_json(sheet, {
+    header: 1,
+    defval: ""
+  });
+
+  const questions = [];
+
+  rows.forEach((row, index) => {
+    const qRaw = String(row[0] || "").trim();
+    const question = String(row[1] || "").trim();
+
+    // 跳過標題列
+    if (
+      index === 0 &&
+      (
+        qRaw.includes("題號") ||
+        question.includes("題目") ||
+        String(row[6] || "").includes("答案") ||
+        String(row[6] || "").toLowerCase().includes("answer")
+      )
+    ) {
+      return;
+    }
+
+    // 跳過空白列
+    if (!qRaw && !question) return;
+
+    const qMatch = qRaw.match(/Q\s*(\d+)/i);
+    const questionNumber = qMatch ? Number(qMatch[1]) : index + 1;
+
+    const options = {};
+
+    ["A", "B", "C", "D"].forEach((letter, optionIndex) => {
+      const cellValue = String(row[optionIndex + 2] || "").trim();
+
+      if (!cellValue) return;
+
+      const cleaned = cellValue.replace(
+        new RegExp(`^${letter}[\\.\\)\\:：、]\\s*`, "i"),
+        ""
+      );
+
+      options[letter] = cleaned;
+    });
+
+    const answerRaw = String(row[6] || "").trim();
+
+    const answer = normalizeAnswerText(
+      answerRaw.replace(/^(Answer|答案|answer_in_bank)\s*[\:：]\s*/i, "")
+    );
+
+    const note = String(row[7] || "")
+      .replace(/^(Note|note|解析|說明)\s*[\:：]\s*/i, "")
+      .trim();
+
+    const missing = [];
+
+    if (!question) {
+      missing.push("題目內容");
+    }
+
+    if (Object.keys(options).length < 2) {
+      missing.push("選項不足 2 個");
+    }
+
+    if (!answer) {
+      missing.push("Answer 答案");
+    }
+
+    if (answer) {
+      answer.split("").forEach(letter => {
+        if (!options[letter]) {
+          missing.push(`答案 ${letter} 找不到對應選項`);
+        }
+      });
+    }
+
+    if (missing.length) {
+      throw new Error(`Excel 第 ${index + 1} 列解析失敗：${missing.join("、")}`);
+    }
+
+    questions.push({
+      question_number: questionNumber,
+      question,
+      images: [],
+      options,
+      answer_in_bank: answer,
+      is_multiple: answer.length > 1,
+      note
+    });
+  });
+
+  return questions;
 }
 
 function normalizeAnswerText(text) {
@@ -210,17 +313,22 @@ function splitQuestionBlocks(text) {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
+
     if (/^Q\s*\d+[\.\:：、]?(?:\s+.*)?$/i.test(line)) {
       startIndexes.push(i);
     }
   }
 
   const blocks = [];
+
   for (let i = startIndexes.length - 1; i >= 0; i--) {
     const start = startIndexes[i];
     const end = i < startIndexes.length - 1 ? startIndexes[i + 1] : lines.length;
     const block = lines.slice(start, end).join("\n").trim();
-    if (block) blocks.unshift(block);
+
+    if (block) {
+      blocks.unshift(block);
+    }
   }
 
   return blocks;
@@ -252,4 +360,3 @@ function debugParseQuestions(text) {
 
   return { parsed, failed };
 }
-

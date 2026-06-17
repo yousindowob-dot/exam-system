@@ -1,30 +1,50 @@
 el.fileInput.addEventListener("change", async event => {
   const file = event.target.files[0];
   if (!file) return;
+
   const fileName = file.name || "題庫";
   const lowerName = fileName.toLowerCase();
+
   try {
     setImportStatus(`正在讀取：${fileName} ...`);
     hideParseDebug();
     hideParsedQuestionDebug();
+
     if (lowerName.endsWith(".txt")) {
       const text = await file.text();
       loadQuestionsFromText(text, fileName);
+
     } else if (lowerName.endsWith(".docx")) {
-        let text = await extractTextFromDocx(file);
+      let text = await extractTextFromDocx(file);
 
-        text = fixBrokenQuestionNumbers(text);
-        text = fixInlineQuestionFormat(text);
+      text = fixBrokenQuestionNumbers(text);
+      text = fixInlineQuestionFormat(text);
 
-        loadQuestionsFromText(text, fileName);
+      loadQuestionsFromText(text, fileName);
+
+    } else if (lowerName.endsWith(".xlsx")) {
+      const parsed = await extractQuestionsFromExcel(file);
+
+      allQuestions = parsed.map((q, index) => ({
+        ...q,
+        question_number: index + 1
+      }));
+
+      updateQuestionCount();
+      setOptions();
+      enableStartButtons(allQuestions.length > 0);
+      showParseDebug([]);
+      showParsedQuestionDebug(allQuestions);
+      setImportStatus(`載入成功：${fileName}，共 ${allQuestions.length} 題。`);
+
     } else {
-      setImportStatus("只支援 .txt 或 .docx", true);
+      setImportStatus("只支援 .txt、.docx 或 .xlsx", true);
     }
+
   } catch (error) {
     setImportStatus(`讀取失敗：${error.message || "未知錯誤"}`, true);
   }
 });
-
 el.loadSampleBtn.addEventListener("click", () => {
   hideParseDebug();
   hideParsedQuestionDebug();
