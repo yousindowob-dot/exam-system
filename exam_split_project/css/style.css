@@ -560,3 +560,16 @@ input:disabled {
   max-width: 95vw;
   max-height: 95vh;
 }
+.sample-downloads{
+    margin-top:12px;
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
+.sample-downloads a{
+    padding:6px 12px;
+    border-radius:8px;
+    text-decoration:none;
+}
